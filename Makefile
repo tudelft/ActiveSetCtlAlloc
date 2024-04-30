@@ -74,6 +74,8 @@ BINARIES = $(addprefix $(BIN_DIR)/, $(SOURCES_INSIDE_SRC:%.c=%.o))
 TESTER = tests
 TEST_SOURCES = tests.c
 TEST_BINARIES = $(TEST_SOURCES:%.c=%.o)
+COMP_SOURCES = comp.c
+COMP_BINARIES = $(COMP_SOURCES:%.c=%.o)
 
 #########
 # compiler conf
@@ -102,8 +104,11 @@ clean : cleaner
 #########
 # actual targets
 $(TESTER) : $(TEST_BINARIES) $(LIBRARY)
-	$(CC) ${CC_FLAGS} $+ -o $@ $(INCLUDES) $(LINK_FLAGS)
 # $+ is all prereqs including douplicates and in order
+	$(CC) ${CC_FLAGS} $+ -o $@ $(INCLUDES) $(LINK_FLAGS)
+
+comp : $(COMP_BINARIES) $(LIBRARY)
+	$(CC) ${CC_FLAGS} $+ -o $@ $(INCLUDES) $(LINK_FLAGS)
 
 %.o : %.c
 ifeq ($(OPTI), 0)
