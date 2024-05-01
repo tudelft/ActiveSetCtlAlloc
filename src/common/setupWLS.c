@@ -104,6 +104,45 @@ void setupWLS_b(
     }
 }
 
+void genAbFromCtlAlloc(
+    int n_v, int n_u,
+    num_t G[AS_N_V*AS_N_U], num_t Wv[AS_N_V], num_t Wu[AS_N_U], num_t up[AS_N_U],
+    num_t dv[AS_N_V],
+    num_t A[AS_N_C*AS_N_U], num_t b[AS_N_C])
+{
+    num_t theta = 2.0e-12;
+    num_t cond_bound = 4e12;
+    num_t gamma;
+    setupWLS_A(G, Wv, Wu, n_v, n_u, theta, cond_bound, A, &gamma);
+    setupWLS_b(dv, up, Wv, Wu, n_v, n_u, gamma, b);
+}
+
+void genHbetaFromAb(
+    int m, int n, num_t A[AS_N_C*AS_N_U], num_t b[AS_N_C],
+    num_t H[AS_N_U*AS_N_U], num_t beta[AS_N_U])
+{
+    // H = 0.5 A**T * A
+    // beta = -A**T * b
+
+    int row, col, k;
+    num_t tmp;
+    for (row = 0; row < n; row++) {
+        for (col = 0; col < n; col++) {
+            tmp = 0.;
+            for (k = 0; k < m; k++)
+                tmp += A[row*m + k] * A[col*m + k];
+            H[col*n + row] = tmp;
+        }
+    }
+
+    for (row = 0; row < n; row++) {
+        tmp = 0.;
+        for (k = 0; k < m; k++)
+            tmp -= A[row*m + k] * b[k];
+        beta[row] = tmp;
+    }
+}
+
 void gamma_estimator(
     const int n, num_t** A2, const num_t cond_target,
     num_t* gamma, num_t* max_sig){
@@ -119,7 +158,11 @@ void gamma_estimator(
         R = 0;
         for (int j=0; j<n; j++) {
             if (j != i)
+#ifdef AS_SINGLE_FLOAT
                 R += fabsf(A2[i][j]);
+#else
+                R += fabs(A2[i][j]);
+#endif
         }
         if (*max_sig < (A2[i][i]+R))
             *max_sig = A2[i][i]+R;
@@ -142,7 +185,11 @@ void cond_estimator(
         R = 0;
         for (int j=0; j<d; j++) {
             if (j != i)
+#ifdef AS_SINGLE_FLOAT
                 R += fabsf(A2[i][j]);
+#else
+                R += fabs(A2[i][j]);
+#endif
         }
         *max_sig = (*max_sig < A2[i][i]+R) ? A2[i][i]+R : *max_sig;
     }

@@ -1,7 +1,9 @@
 {
     "files.associations": {
+        "*.ptx": "platformio-debug.asm",
         "stdio.h": "c",
         "solveactiveset.h": "c",
-        "setupwls.h": "c"
+        "setupwls.h": "c",
+        "random": "c"
     }
 }

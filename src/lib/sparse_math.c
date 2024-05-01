@@ -28,6 +28,22 @@ void backward_tri_solve(int n, num_t** A, const num_t* b, num_t* x) {
     }
 }
 
+void backward_tri_solve2(int n, int lda, num_t* A, const num_t* b, num_t* x) {
+    if (n < 1)
+        return;
+
+    x[n-1] = b[n-1] / A[(n-1)+lda*(n-1)];
+
+    for (int i=n-2; i >= 0; i--) {
+        num_t tsum = 0;
+        for (int j=i+1; j < n; j++) {
+            tsum += A[i+lda*j] * x[j];
+        }
+
+        x[i] = (b[i] - tsum) / A[i+lda*i];
+    }
+}
+
 void tri_mult(int n, int m, num_t** A, const num_t* x, num_t* b) {
     for (int i=0; i < n; i++) {
         b[i] = 0;

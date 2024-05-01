@@ -34,6 +34,7 @@
  * 
  */
 void qr_shift ( int n, int p, num_t** Q_ptr, num_t** R_ptr, int i, int j);
+void qr_shift2 ( int n, int p, num_t* Q_ptr, num_t* R_ptr, int i, int j);
 
 /**
  * @brief Compute Givens plane rotation
@@ -78,6 +79,7 @@ void givens(num_t a, num_t b, num_t G[4]);
  * @param row2 Row in square matrix containing Givens parameters G[1] and G[3]
 */
 void givens_left_apply(int p, num_t** A, num_t* G, int row1, int row2);
+void givens_left_apply2(int n, int p, num_t* A, num_t* G, int row1, int row2);
 
 /**
  * @brief Sparse computation of A <- A * G, where G is adjacent Givens
@@ -103,5 +105,6 @@ void givens_left_apply(int p, num_t** A, num_t* G, int row1, int row2);
  * @param col2 Column in square matrix containing Givens parameters G[2] and G[3]
 */
 void givens_right_apply(int n, num_t** A, num_t* G, int col1, int col2);
+void givens_right_apply2(int n, num_t* A, num_t* G, int col1, int col2);
 
 #endif

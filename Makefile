@@ -12,6 +12,7 @@ endif
 SINGLE?=n
 ifeq ($(SINGLE), y)
 DEFINES += -DAS_SINGLE_FLOAT
+DEFINES += -DDAQP_SINGLE_PRECISION
 endif
 
 TRUNCATE?=y
@@ -49,12 +50,17 @@ endif
 OPTI?=3
 DEBUG?=n
 ifeq ($(DEBUG), y)
-# override optimisations
-OPTI=0
 DEBUG_FLAG=-g
 endif
 
-OPTIM = -O$(OPTI) -fno-loop-optimize -fno-aggressive-loop-optimizations
+PROFILE_FLAG=
+PROFILE?=n
+ifeq ($(PROFILE), y)
+DEBUG_FLAG=-g
+PROFILE_FLAG=-pg
+endif
+
+OPTIM = -O$(OPTI)# -fno-loop-optimize -fno-aggressive-loop-optimizations
 CONF = $(DEFINES) $(DEBUG_FLAG) $(OPTIM) $(VERBOSE_FLAG)
 
 #########
@@ -63,7 +69,7 @@ LIB_NAME = as
 SRC_DIR = ./src
 BIN_DIR = ./bin
 LIBRARY = $(BIN_DIR)/lib$(LIB_NAME).$(LIB_EXT)
-SOURCES_INSIDE_SRC = common/solveActiveSet.c solveActiveSet_chol.c solveActiveSet_qr.c solveActiveSet_qr_naive.c common/setupWLS.c lib/chol_math.c lib/qr_updates.c lib/qr_wrapper.c lib/qr_solve/qr_solve.c lib/qr_solve/r8lib_min.c lib/sparse_math.c
+SOURCES_INSIDE_SRC = common/solveActiveSet.c solveActiveSet_chol.c solveActiveSet_qr.c solveActiveSet_qr_naive.c solveActiveSet_new_qr.c common/setupWLS.c lib/chol_math.c lib/qr_updates.c lib/qr_wrapper.c lib/qr_solve/qr_solve.c lib/qr_solve/r8lib_min.c lib/sparse_math.c
 ifeq ($(INCLUDE_CG),y)
 SOURCES_INSIDE_SRC += solveActiveSet_cg.c
 endif
@@ -82,8 +88,8 @@ COMP_BINARIES = $(COMP_SOURCES:%.c=%.o)
 CC = gcc
 WARN_FLAGS = -Wall -W -Wwrite-strings -Winline -Wstrict-prototypes -Wnested-externs -Wpointer-arith -Wcast-align -Wcast-qual -Wshadow -Werror=vla
 CC_FLAGS = -fstack-usage -fwrapv -fPIC ${WARN_FLAGS} $(CONF)
-INCLUDES = -Isrc/common -Isrc/lib -Isrc
-LINK_FLAGS = -lm
+INCLUDES = -Isrc/common -Isrc/lib -Isrc -Iext/daqp/include
+LINK_FLAGS = -lm -Lext/daqp/build/ -ldaqpstat
 
 # other programs
 AR = ar rcsD
@@ -105,17 +111,17 @@ clean : cleaner
 # actual targets
 $(TESTER) : $(TEST_BINARIES) $(LIBRARY)
 # $+ is all prereqs including douplicates and in order
-	$(CC) ${CC_FLAGS} $+ -o $@ $(INCLUDES) $(LINK_FLAGS)
+	$(CC) ${CC_FLAGS} $+ -o $@ $(INCLUDES) $(LINK_FLAGS) $(PROFILE_FLAG)
 
 comp : $(COMP_BINARIES) $(LIBRARY)
-	$(CC) ${CC_FLAGS} $+ -o $@ $(INCLUDES) $(LINK_FLAGS)
+	$(CC) ${CC_FLAGS} $+ -o $@ $(INCLUDES) $(LINK_FLAGS) $(PROFILE_FLAG)
 
 %.o : %.c
 ifeq ($(OPTI), 0)
-	$(CC) -c ${CC_FLAGS} -O0 $^ -o $@ $(INCLUDES)
+	$(CC) -c ${CC_FLAGS} -O0 $^ -o $@ $(INCLUDES) $(PROFILE_FLAG)
 else
 # O3 is buggy here for some reason and generates spurious warnings
-	$(CC) -c ${CC_FLAGS} -O1 $^ -o $@ $(INCLUDES)
+	$(CC) -c ${CC_FLAGS} -O0 $^ -o $@ $(INCLUDES) $(PROFILE_FLAG)
 endif
 
 $(LIBRARY) : $(BINARIES)
@@ -124,15 +130,16 @@ ifeq ($(STATIC),y)
 # the $? would only copies the changed $(BINARIES) into the archive thanks to the r 
 # flag in the command for ar, pretty neat
 else
-	$(CC) -shared $(CC_FLAGS) $^ -o $@ $(INCLUDES)
+	$(CC) -shared $(CC_FLAGS) $^ -o $@ $(INCLUDES) $(PROFILE_FLAG)
 endif
 
 $(BIN_DIR)/%.o : $(SRC_DIR)/%.c
 	@mkdir -p $(dir $@)
-	$(CC) -c $(CC_FLAGS) $^ -o $@ $(INCLUDES)
+	$(CC) -c $(CC_FLAGS) $^ -o $@ $(INCLUDES) $(PROFILE_FLAG)
 
 cleaner : 
 	$(RM) -rf bin
 	$(RM) *.o
 	${RM} *.su
 	$(RM) $(TESTER)
+	${RM} comp

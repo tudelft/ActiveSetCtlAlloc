@@ -28,6 +28,7 @@
  * @param x On exit: solution to Ax = b
 */
 void backward_tri_solve(int n, num_t** A, const num_t* b, num_t* x);
+void backward_tri_solve2(int n, int lda, num_t* A, const num_t* b, num_t* x);
 
 /**
  * @brief Efficiently compute b = Ax for A upper tri (not necessarily square)

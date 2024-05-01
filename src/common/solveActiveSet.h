@@ -65,6 +65,7 @@ typedef enum {
 #ifdef AS_INCLUDE_CG
   AS_CG = 3,
 #endif
+  AS_NEW_QR = 4,
   } activeSetAlgoChoice;
 
 /**
@@ -109,6 +110,10 @@ activeSetExitCode solveActiveSet_chol(
   const num_t umin[AS_N_U], const num_t umax[AS_N_U], num_t us[AS_N_U],
   int8_t Ws[AS_N_U], int imax, const int n_u, const int n_v,
   int *iter, int *n_free, num_t costs[]);
+activeSetExitCode solveActiveSet_new_qr(
+  const int m, const int n, const num_t* A, const num_t* b,
+  const num_t* lb, const num_t* ub, num_t* x,
+  int* Ws, int imax, int *iter, int *n_free, num_t costs[]);
 #ifdef AS_INCLUDE_CG
 activeSetExitCode solveActiveSet_cg(
   const num_t A_col[AS_N_C*AS_N_U], const num_t b[AS_N_C],

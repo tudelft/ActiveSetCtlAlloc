@@ -107,6 +107,17 @@ void setupWLS_b(
  * @param gamma On exit: holds the value of gamma as described above
  * @param max_sig On exit: holds an over-estimate of the largest eig(A^TA)
  */
+
+void genAbFromCtlAlloc(
+    int n_v, int n_u,
+    num_t G[AS_N_V*AS_N_U], num_t Wv[AS_N_V], num_t Wu[AS_N_U], num_t up[AS_N_U],
+    num_t dv[AS_N_V],
+    num_t A[AS_N_C*AS_N_U], num_t b[AS_N_C]);
+
+void genHbetaFromAb(
+    int m, int n, num_t A[AS_N_C*AS_N_U], num_t b[AS_N_C],
+    num_t H[AS_N_U*AS_N_U], num_t beta[AS_N_U]);
+
 void gamma_estimator(
     const int d, num_t** A2, const num_t cond_target,
     num_t* gamma, num_t* max_sig);

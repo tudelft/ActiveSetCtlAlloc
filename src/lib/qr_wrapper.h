@@ -14,6 +14,11 @@
 
 #include "solveActiveSet.h"
 
+typedef enum {
+    QR_HOUSEHOLDER,
+    QR_GIVENS_BLOCKDIAG,
+} qr_decomp_algo;
+
 /** 
  * @brief Find unitary Q and upper triangular R, such that A = QR.
  * 
@@ -34,6 +39,7 @@
  * 
  */
 void qr_wrapper(int m, int n, int perm[], num_t** A, num_t** Q, num_t** R);
+void qr_wrapper2(int m, int n, num_t* in, num_t* R);
 
 /**
  * @brief Recovers unitary Q from Householder factors of Q of QR factorisation
@@ -60,5 +66,6 @@ void qr_wrapper(int m, int n, int perm[], num_t** A, num_t** Q, num_t** R);
  * @param tau Scalar factors in the Householder matrix. See above.
 */
 int dorgqr ( int m, int n, const num_t A[], num_t Q[], num_t tau[]);
+int org2r ( int m, int k, num_t* A, num_t* TAU );
 
 #endif

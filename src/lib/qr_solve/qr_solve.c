@@ -456,7 +456,11 @@ void dqrank ( num_t a[], int lda, int m, int n, num_t tol, int *kr,
 
   for ( j = 0; j < k; j++ )
   {
+#ifdef AS_SINGLE_FLOAT
     if ( fabsf ( a[j+j*lda] ) <= tol * fabsf ( a[0+0*lda] ) )
+#else
+    if ( fabs ( a[j+j*lda] ) <= tol * fabs ( a[0+0*lda] ) )
+#endif
     {
       return;
     }
@@ -687,7 +691,11 @@ void dqrdc ( num_t a[], int lda, int n, int p, num_t qraux[], int jpvt[],
           {
             if ( qraux[j-1] != 0.0 )
             {
-              tt = 1.0 - powf ( fabsf ( a[l-1+(j-1)*lda] ) / qraux[j-1], 2 );
+#ifdef AS_SINGLE_FLOAT
+              tt = 1.0 - powf ( fabs ( a[l-1+(j-1)*lda] ) / qraux[j-1], 2 );
+#else
+              tt = 1.0 - powf ( fabs ( a[l-1+(j-1)*lda] ) / qraux[j-1], 2 );
+#endif
               tt = r8_max ( tt, 0.0 );
               t = tt;
               tt = 1.0 + 0.05 * tt * powf ( qraux[j-1] / work[j-1], 2 );
