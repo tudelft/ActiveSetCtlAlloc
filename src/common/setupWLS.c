@@ -11,6 +11,7 @@
 
 #include "setupWLS.h"
 #include <math.h>
+#include "sparse_math.h"
 
 void setupWLS_A(
     const num_t B[AS_N_V*AS_N_U], const num_t Wv[AS_N_V], num_t Wu[AS_N_U],
@@ -111,7 +112,7 @@ void genAbFromCtlAlloc(
     num_t A[AS_N_C*AS_N_U], num_t b[AS_N_C])
 {
     num_t theta = 2.0e-9;
-    num_t cond_bound = 4e7;
+    num_t cond_bound = 4e5;
     num_t gamma;
     setupWLS_A(G, Wv, Wu, n_v, n_u, theta, cond_bound, A, &gamma);
     setupWLS_b(dv, up, Wv, Wu, n_v, n_u, gamma, b);
@@ -141,6 +142,38 @@ void genHbetaFromAb(
             tmp -= A[row*m + k] * b[k];
         beta[row] = tmp;
     }
+}
+
+void genHbetaFromAb_sparse(
+    int m, int n, num_t A[AS_N_C*AS_N_U], num_t b[AS_N_C],
+    num_t H[AS_N_U*AS_N_U], num_t beta[AS_N_U])
+{
+    // H = A**T * A
+    // beta = -A**T * b
+
+    int row, col, k;
+    int mb = m - n;
+    num_t tmp;
+    for (row = 0; row < n; row++) {
+        for (col = 0; col < n; col++) {
+            tmp = 0.;
+            for (k = 0; k < mb; k++)
+                tmp += A[row*m + k] * A[col*m + k];
+            H[col*n + row] = tmp;
+        }
+    }
+    for (row = 0; row < n; row++)
+        H[row*n + row] += A[row*m + row+mb]*A[row*m + row+mb];
+
+    for (row = 0; row < n; row++) {
+        tmp = 0.;
+        for (k = 0; k < mb; k++)
+            tmp -= A[row*m + k] * b[k];
+        beta[row] = tmp;
+    }
+
+    for (row = 0; row < n; row++)
+        beta[row] -= A[row*m + row+mb] * b[mb+row];
 }
 
 void gamma_estimator(

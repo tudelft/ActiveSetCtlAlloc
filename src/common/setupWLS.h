@@ -117,6 +117,9 @@ void genAbFromCtlAlloc(
 void genHbetaFromAb(
     int m, int n, num_t A[AS_N_C*AS_N_U], num_t b[AS_N_C],
     num_t H[AS_N_U*AS_N_U], num_t beta[AS_N_U]);
+void genHbetaFromAb_sparse(
+    int m, int n, num_t A[AS_N_C*AS_N_U], num_t b[AS_N_C],
+    num_t H[AS_N_U*AS_N_U], num_t beta[AS_N_U]);
 
 void gamma_estimator(
     const int d, num_t** A2, const num_t cond_target,

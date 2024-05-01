@@ -63,7 +63,8 @@ static long long unsigned int runTestCase(
             break;
         }
         case DAQP:
-            genHbetaFromAb( test->n_v+test->n_u, test->n_u, A, b, H, beta );
+            //genHbetaFromAb( test->n_v+test->n_u, test->n_u, A, b, H, beta );
+            genHbetaFromAb_sparse( test->n_v+test->n_u, test->n_u, A, b, H, beta );
             int sense[AS_N_U]; memset(sense, 0, sizeof(int)*test->n_u);
             DAQPProblem qp = {test->n_u, test->n_u, test->n_u, H, beta, NULL, test->ub, test->lb, sense};
             c_float lam[AS_N_U];

@@ -4,6 +4,7 @@
         "stdio.h": "c",
         "solveactiveset.h": "c",
         "setupwls.h": "c",
-        "random": "c"
+        "random": "c",
+        "functional": "c"
     }
 }

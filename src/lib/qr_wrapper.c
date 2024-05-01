@@ -397,8 +397,10 @@ int org2r2_sparse ( int m, int k, int mb, num_t* A, num_t* TAU )
     // Q <-- I - TAU[k-1] * outer(vk-1, vk-1) * I
     for ( im = m-1; im >= ik; im-- ) {
         tmp = A[im + ik*lda];
-        for ( in = ik; in < m; in++ )
-            A[in + im*lda] = ((float) (in == im)) - TAU[ik] * A[in + ik*lda] * tmp;
+        for ( in = ik; in < m; in++ ) {
+            A[in + im*lda] = - TAU[ik] * A[in + ik*lda] * tmp;
+        }
+        A[im + im*lda] += 1.;
     }
 
     ik--;
@@ -417,16 +419,34 @@ int org2r2_sparse ( int m, int k, int mb, num_t* A, num_t* TAU )
                 for ( in = ik+2; in < ik+mb+1; in++ )
                     tmp += A[in + ik*lda] * A[in + im*lda];
             }
-            tmp *= TAU[ik];
-            for ( in = ik; in < ik+mb+1; in++ ) {
-                if ( ik == im )
-                    A[in + im*lda] = ((float)(in == im)) - A[in + ik*lda] * tmp;
-                else {
-                    if ( in == ik )
-                        A[in + im*lda] = -A[in + ik*lda] * tmp;
-                    else
-                        A[in + im*lda] = A[in + im*lda] - A[in + ik*lda] * tmp;
-                }
+            tmp *= -TAU[ik];
+            //num_t tmp2 = A[ik + im*lda];
+            //if ( ik == im ) {
+            //    dscal(mb+1, tmp, A+im*lda+im, 1);
+            //    A[im + im*lda] += 1.0;
+            //} else {
+            //    daxpy(mb+1, tmp, A+ik+ik*lda, 1, A+ik+im*lda, 1);
+            //    A[ik + im*lda] -= tmp2;
+            //}
+            //for ( in = ik; in < ik+mb+1; in++ ) {
+            //    if ( ik == im ) {
+            //        A[in + im*lda] = ((float)(in == im)) + A[in + im*lda] * tmp;
+            //    } else {
+            //        if ( in == ik )
+            //            A[in + im*lda] = A[in + ik*lda] * tmp;
+            //        else
+            //            A[in + im*lda] = A[in + im*lda] + A[in + ik*lda] * tmp;
+            //    }
+            //}
+            if ( ik == im ) {
+                for ( in = ik; in < ik+mb+1; in++ )
+                    A[in + im*lda] *= tmp;
+                A[im + im*lda] += 1.;
+            } else {
+                num_t tmp2 = A[ik + im*lda];
+                for ( in = ik; in < ik+mb+1; in++ )
+                    A[in + im*lda] += A[in + ik*lda] * tmp;
+                A[ik + im*lda] -= tmp2;
             }
         }
     }

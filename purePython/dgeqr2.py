@@ -146,8 +146,8 @@ def dgeqr2_sparse( m, n, mb, a, tau ):
 if __name__=="__main__":
     import numpy as np
     np.random.seed(1)
-    mb = 6
-    n = 12
+    mb = 4
+    n = 6
     m = n + mb
     A = np.triu(np.random.random((m,n)) - 0.5, -mb)
     #m = 4
@@ -165,7 +165,7 @@ if __name__=="__main__":
     #dgeqr2( m, n, Awork, tau )
 
 
-    print(CYCLES)
+    print("Sparse householder: ", CYCLES)
     CYCLES_Householder = CYCLES
     print(np.max(np.abs(U - Awork)))
 
@@ -175,8 +175,8 @@ if __name__=="__main__":
     dorg2r_sparse( m, m, mb, np.sum(tau > 0.), Qwork, tau )
     #dorg2r( m, m, np.sum(tau > 0.), Qwork, tau )
 
-    print(CYCLES - CYCLES_Householder)
-    print(CYCLES)
+    print("Sparse org2r: ", CYCLES - CYCLES_Householder)
+    print("Total: ", CYCLES)
     print(np.max(np.abs(Qwork - Q)))
 
     Atest = np.array([
