@@ -93,7 +93,10 @@ void qr_wrapper2(int m, int n, num_t* in, num_t* R) {
   num_t work[AS_N_U];
   int job = 0;
 
-  dqrdc ( in, m, m, n, tau, jpvt, work, job );
+  //dqrdc ( in, m, m, n, tau, jpvt, work, job );
+  //geqr2 ( m, n, in, tau );
+  geqr2_sparse ( m, n, m-n, in, tau );
+
 
   // Copy the upper triangular part of in to R
   for (int j = 0; j < n; j++)  // Loop over columns
@@ -118,7 +121,9 @@ void qr_wrapper2(int m, int n, num_t* in, num_t* R) {
   printf("];\n\n");
   #endif
 
-  org2r ( m, n, in, tau );
+  //org2r ( m, n, in, tau );
+  //org2r2 ( m, n, in, tau );
+  org2r2_sparse ( m, n, m-n, in, tau );
 
   #ifdef debug_qr
   printf("in = [\n");
@@ -240,4 +245,191 @@ int org2r ( int m, int k, num_t* A, num_t* TAU )
     return 0;
 }
 
+num_t dlarfg( int n, num_t* x ) {
+    num_t nu = dnrm2( n-1, x+1, 1 );
+    if (nu > 1e-12) {
+        num_t beta = ((x[0] >= 0.) ? -1. : +1.);
+#ifdef AS_SINGLE_FLOAT
+        beta *= hypotf( x[0], nu );
+#else
+        beta *= hypot( x[0], nu );
+#endif
+        num_t tau = (beta - x[0]) / beta;
+        num_t inu = 1. / (x[0] - beta);
+        x[0] = beta;
 
+        dscal( n-1, inu, x+1, 1);
+        return tau;
+    } else {
+        return 0.;
+    }
+}
+
+void dlarf_left( int m, int n, num_t* v, num_t tau, num_t* c, int ldc ) {
+    if (tau == 0.) return;
+
+    for (int col=1; col<n; col++) {
+        num_t tmp = tau * ddot( m, v, 1, c+ldc*col, 1 );
+        for (int row=0; row<m; row++) {
+            c[row + ldc*col] -= v[row] * tmp;
+        }
+    }
+}
+
+int geqr2( int m, int n, num_t* in, num_t* tau ) {
+    for (int i=0; i < n; i++) {
+        int diag = i+m*i;
+        tau[i] = dlarfg( m-i, in+diag );
+        num_t aii = in[diag];
+        in[diag] = 1.;
+        dlarf_left( m-i, n-i, in+diag, tau[i], in+diag, m );
+        in[diag] = aii;
+    }
+    return 0;
+}
+
+int geqr2_sparse( int m, int n, int mb, num_t* in, num_t* tau ) {
+    for (int i=0; i < n; i++) {
+        int diag = i+m*i;
+        tau[i] = dlarfg( mb+1, in+diag );
+        num_t aii = in[diag];
+        in[diag] = 1.;
+        dlarf_left( mb+1, n-i, in+diag, tau[i], in+diag, m );
+        in[diag] = aii;
+    }
+    return 0;
+}
+
+int org2r2 ( int m, int k, num_t* A, num_t* TAU )
+{
+/*  Purpose */
+/*  ======= */
+
+/*  SORG2R generates an m by n real matrix Q with orthonormal columns, */
+/*  which is defined as the first n columns of a product of k elementary */
+/*  reflectors of order m */
+
+/*        Q  =  H(1) H(2) . . . H(k) */
+
+/*  as returned by SGEQRF. */
+
+/* Till Blaha 2024 */
+
+    // NOTE: full Q will be generated, so must be M x M
+
+    if (k > m) return 1;
+
+    int ik, in, im;
+    int lda = m;
+    num_t tmp;
+
+    for ( ik = 0; ik < k; ik++ ) A[ik + ik*lda] = 1.0f;
+
+    // last householder factor k-1
+    ik = k-1;
+    // Q <-- I - TAU[k-1] * outer(vk-1, vk-1) * I
+    for ( im = m-1; im >= ik; im-- ) {
+        tmp = A[im + ik*lda];
+        for ( in = ik; in < m; in++ )
+            A[in + im*lda] = ((float) (in == im)) - TAU[ik] * A[in + ik*lda] * tmp;
+    }
+
+    ik--;
+    for ( ; ik >= 0; ik-- ) {
+        // Q <-- Q - TAU[ik] * outer(v[k], v[k]) * Q
+        // note, that only lower triangle of Q[ik-1:, ik-1:] is actually Q at the
+        // start of each iteration. The rest still contains the householder
+        // vectors 0:ik-1 on the lower triangular (including diagonal) and the 
+        // upper triangular (excluding diagonal) still contains R
+        for ( im = m-1; im >= ik; im-- ) {
+            // inner product v[ik]**T Q[:, im] will be stored in tmp
+            if ( ik == im )
+                tmp = A[ik + ik*lda];
+            else {
+                tmp = A[ik+1 + ik*lda] * A[ik+1 + im*lda];
+                for ( in = ik+2; in < m; in++ )
+                    tmp += A[in + ik*lda] * A[in + im*lda];
+            }
+            tmp *= TAU[ik];
+            for ( in = ik; in < m; in++ ) {
+                if ( ik == im )
+                    A[in + im*lda] = ((float)(in == im)) - A[in + ik*lda] * tmp;
+                else {
+                    if ( in == ik )
+                        A[in + im*lda] = -A[in + ik*lda] * tmp;
+                    else
+                        A[in + im*lda] = A[in + im*lda] - A[in + ik*lda] * tmp;
+                }
+            }
+        }
+    }
+
+    return 0;
+}
+
+int org2r2_sparse ( int m, int k, int mb, num_t* A, num_t* TAU )
+{
+/*  Purpose */
+/*  ======= */
+
+/*  SORG2R generates an m by n real matrix Q with orthonormal columns, */
+/*  which is defined as the first n columns of a product of k elementary */
+/*  reflectors of order m */
+
+/*        Q  =  H(1) H(2) . . . H(k) */
+
+/*  as returned by SGEQRF. */
+
+/* Till Blaha 2024 */
+
+    // NOTE: full Q will be generated, so must be M x M
+
+    if (k > m) return 1;
+
+    int ik, in, im;
+    int lda = m;
+    num_t tmp;
+
+    for ( ik = 0; ik < k; ik++ ) A[ik + ik*lda] = 1.0f;
+
+    // last householder factor k-1
+    ik = k-1;
+    // Q <-- I - TAU[k-1] * outer(vk-1, vk-1) * I
+    for ( im = m-1; im >= ik; im-- ) {
+        tmp = A[im + ik*lda];
+        for ( in = ik; in < m; in++ )
+            A[in + im*lda] = ((float) (in == im)) - TAU[ik] * A[in + ik*lda] * tmp;
+    }
+
+    ik--;
+    for ( ; ik >= 0; ik-- ) {
+        // Q <-- Q - TAU[ik] * outer(v[k], v[k]) * Q
+        // note, that only lower triangle of Q[ik-1:, ik-1:] is actually Q at the
+        // start of each iteration. The rest still contains the householder
+        // vectors 0:ik-1 on the lower triangular (including diagonal) and the 
+        // upper triangular (excluding diagonal) still contains R
+        for ( im = m-1; im >= ik; im-- ) {
+            // inner product v[ik]**T Q[:, im] will be stored in tmp
+            if ( ik == im )
+                tmp = A[ik + ik*lda];
+            else {
+                tmp = A[ik+1 + ik*lda] * A[ik+1 + im*lda];
+                for ( in = ik+2; in < ik+mb+1; in++ )
+                    tmp += A[in + ik*lda] * A[in + im*lda];
+            }
+            tmp *= TAU[ik];
+            for ( in = ik; in < ik+mb+1; in++ ) {
+                if ( ik == im )
+                    A[in + im*lda] = ((float)(in == im)) - A[in + ik*lda] * tmp;
+                else {
+                    if ( in == ik )
+                        A[in + im*lda] = -A[in + ik*lda] * tmp;
+                    else
+                        A[in + im*lda] = A[in + im*lda] - A[in + ik*lda] * tmp;
+                }
+            }
+        }
+    }
+
+    return 0;
+}

@@ -110,8 +110,8 @@ void genAbFromCtlAlloc(
     num_t dv[AS_N_V],
     num_t A[AS_N_C*AS_N_U], num_t b[AS_N_C])
 {
-    num_t theta = 2.0e-12;
-    num_t cond_bound = 4e12;
+    num_t theta = 2.0e-9;
+    num_t cond_bound = 4e7;
     num_t gamma;
     setupWLS_A(G, Wv, Wu, n_v, n_u, theta, cond_bound, A, &gamma);
     setupWLS_b(dv, up, Wv, Wu, n_v, n_u, gamma, b);

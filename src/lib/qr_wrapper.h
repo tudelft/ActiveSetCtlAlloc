@@ -67,5 +67,12 @@ void qr_wrapper2(int m, int n, num_t* in, num_t* R);
 */
 int dorgqr ( int m, int n, const num_t A[], num_t Q[], num_t tau[]);
 int org2r ( int m, int k, num_t* A, num_t* TAU );
+int org2r2 ( int m, int k, num_t* A, num_t* TAU );
+int org2r2_sparse ( int m, int k, int mb, num_t* A, num_t* TAU );
+
+num_t dlarfg( int n, num_t* x );
+void dlarf_left( int m, int n, num_t* v, num_t tau, num_t* c, int ldc );
+int geqr2( int m, int n, num_t* in, num_t* tau );
+int geqr2_sparse( int m, int n, int mb, num_t* in, num_t* tau );
 
 #endif

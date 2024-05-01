@@ -101,7 +101,7 @@ static void verifyTestCase( TestCase* test, num_t* us, num_t* ue, num_t* ve ) {
 }
 
 #define PERTURBATION 0.01
-#define REPEAT_CASES 1
+#define REPEAT_CASES 1000
 
 int main( int argc, char** argv ) {
 
