@@ -21,6 +21,8 @@ activeSetAlgo solveActiveSet(activeSetAlgoChoice choice) {
         case AS_CG:
             return &solveActiveSet_cg;
 #endif
+        case AS_NEW_QR:
+            return &solveActiveSet_new_qr;
         default:
             return &solveActiveSet_qr;
     }

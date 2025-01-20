@@ -60,9 +60,10 @@
  * @return 0: exact solution found. 1: imax hit, solution not optimal
  */
 activeSetExitCode solveActiveSet_new_qr(
-  const int m, const int n, const num_t* A_col, const num_t* b,
-  const num_t* lb, const num_t* ub, num_t* x,
-  int* Ws, int imax, int *iter, int *n_free, num_t costs[])
+  const num_t A_col[AS_N_C*AS_N_U], const num_t b[AS_N_C],
+  const num_t lb[AS_N_U], const num_t ub[AS_N_U], num_t x[AS_N_U],
+  int8_t Ws[AS_N_U], int imax, const int n_u, const int n_v,
+  int *iter, int *n_free, num_t costs[])
 {
 
 #ifndef AS_RECORD_COST
@@ -74,8 +75,8 @@ activeSetExitCode solveActiveSet_new_qr(
   int exit_code = AS_ITER_LIMIT;
 
   int i, j;
-  //int n = n;
-  //int m = m;
+  int n = n_u;
+  int m = n_u + n_v;
   //int n_v = m-n;
 
   for (i = 0; i < n; i++)

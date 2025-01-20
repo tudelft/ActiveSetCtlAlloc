@@ -168,7 +168,7 @@ static void main_solveActiveSet(int mode, activeSetAlgoChoice choice)
 
   // predefine arrays
   int8_t Ws[AS_N_U] = {1, 0, -1, 1, 0, 0};
-  //memset(Ws, 0, sizeof(int8_t)*AS_N_U);
+  memset(Ws, 0, sizeof(int8_t)*AS_N_U);
 
   // global settings
   //num_t theta = 1.5e-3 * sqrtf(1e-4);  // works: 1.5e-3 * 1e0

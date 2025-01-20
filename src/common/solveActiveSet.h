@@ -111,9 +111,10 @@ activeSetExitCode solveActiveSet_chol(
   int8_t Ws[AS_N_U], int imax, const int n_u, const int n_v,
   int *iter, int *n_free, num_t costs[]);
 activeSetExitCode solveActiveSet_new_qr(
-  const int m, const int n, const num_t* A, const num_t* b,
-  const num_t* lb, const num_t* ub, num_t* x,
-  int* Ws, int imax, int *iter, int *n_free, num_t costs[]);
+  const num_t A_col[AS_N_C*AS_N_U], const num_t b[AS_N_C],
+  const num_t lb[AS_N_U], const num_t ub[AS_N_U], num_t x[AS_N_U],
+  int8_t Ws[AS_N_U], int imax, const int n_u, const int n_v,
+  int *iter, int *n_free, num_t costs[]);
 #ifdef AS_INCLUDE_CG
 activeSetExitCode solveActiveSet_cg(
   const num_t A_col[AS_N_C*AS_N_U], const num_t b[AS_N_C],

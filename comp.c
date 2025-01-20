@@ -49,17 +49,10 @@ static long long unsigned int runTestCase(
             #else
               num_t *costs = 0;
             #endif
-            if (algo == AS_NEW_QR) {
-                int Ws[AS_N_U]; memset(Ws, 0, sizeof(int)*AS_N_U);
-                solveActiveSet_new_qr(
-                    test->n_v+test->n_u, test->n_u, A, b, test->lb, test->ub, us, Ws,
-                    100, &iter, &n_free, costs);
-            } else {
-                int8_t Ws[AS_N_U]; memset(Ws, 0, sizeof(int8_t)*AS_N_U);
-                solveActiveSet(algo)(
-                    A, b, test->lb, test->ub, us, Ws, 100, test->n_u, test->n_v,
-                    &iter, &n_free, costs);
-            }
+            int8_t Ws[AS_N_U]; memset(Ws, 0, sizeof(int8_t)*AS_N_U);
+            solveActiveSet(algo)(
+                A, b, test->lb, test->ub, us, Ws, 100, test->n_u, test->n_v,
+                &iter, &n_free, costs);
             break;
         }
         case DAQP:
