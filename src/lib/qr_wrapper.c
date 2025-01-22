@@ -193,6 +193,8 @@ int org2r ( int m, int k, num_t* A, num_t* TAU )
 
     // NOTE: full Q will be generated, so must be M x M
 
+#define TAU_TOL (1e-5f)
+
     if (k > m) return 1;
 
     int ik, in, im;
@@ -201,19 +203,11 @@ int org2r ( int m, int k, num_t* A, num_t* TAU )
 
     for ( ik = 0; ik < k; ik++ ) A[ik + ik*lda] = TAU[ik];
     for ( im = k; im < m; im++ ) A[im + im*lda] = 1.0f;
-    for ( ik = 0; ik < k; ik++ ) TAU[ik] = 1. / (TAU[ik]);
 
     // last householder factor k-1
     ik = k-1;
-    // Q <-- I - TAU[k-1] * outer(vk-1, vk-1) * I
-    for ( im = m-1; im >= ik; im-- ) {
-        tmp = A[im + ik*lda];
-        for ( in = ik; in < m; in++ )
-            A[in + im*lda] = ((float) (in == im)) - TAU[ik] * A[in + ik*lda] * tmp;
-    }
-
-    ik--;
     for ( ; ik >= 0; ik-- ) {
+        float iTau = (TAU[ik] < TAU_TOL) ? 0. : 1.f / TAU[ik];
         // Q <-- Q - TAU[ik] * outer(v[k], v[k]) * Q
         // note, that only lower triangle of Q[ik-1:, ik-1:] is actually Q at the
         // start of each iteration. The rest still contains the householder
@@ -228,7 +222,7 @@ int org2r ( int m, int k, num_t* A, num_t* TAU )
                 for ( in = ik+2; in < m; in++ )
                     tmp += A[in + ik*lda] * A[in + im*lda];
             }
-            tmp *= TAU[ik];
+            tmp *= iTau;
             for ( in = ik; in < m; in++ ) {
                 if ( ik == im )
                     A[in + im*lda] = ((float)(in == im)) - A[in + ik*lda] * tmp;
